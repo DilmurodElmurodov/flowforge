@@ -1,0 +1,38 @@
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+
+management:
+  tracing:
+    enabled: false          # no OTLP collector in CI
+
+logging:
+  level:
+    com.flowforge: DEBUG
+    org.apache.kafka: ERROR
+    org.testcontainers: INFO
+
+flowforge:
+  security:
+    jwt:
+      secret: integration-test-secret-integration-test-secret-0123456789
+  bootstrap:
+    enabled: true
+    tenant-id: 11111111-1111-1111-1111-111111111111
+    tenant-name: acme
+    admin-username: admin
+    admin-email: admin@acme.test
+    admin-password: Sup3r-Secret-Pass!
+  outbox:
+    poll-interval-ms: 250
+    initial-delay-ms: 500
+  execution:
+    recovery:
+      enabled: false
+  kafka:
+    partitions: 1
+    retry:
+      max-attempts: 2
+      initial-interval-ms: 200
+      max-interval-ms: 400

@@ -1,0 +1,99 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.flowforge'
+version = '1.0.0'
+description = 'FlowForge - Enterprise Workflow & Automation Platform'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    jjwtVersion = '0.12.6'
+    springdocVersion = '2.8.9'
+    // Docker Engine 29 raised the minimum API version; 1.21.4 is the first Testcontainers release that negotiates it.
+    set('testcontainers.version', '1.21.4')
+}
+
+dependencies {
+    // --- Spring Boot core stack ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // --- Messaging ---
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // --- Persistence ---
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // --- Security (JWT) ---
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+
+    // --- Observability: Micrometer + OpenTelemetry ---
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:context-propagation'
+
+    // --- API documentation ---
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
+    // --- Testing ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:kafka'
+    testImplementation 'org.awaitility:awaitility'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters', '-Xlint:deprecation']
+}
+
+// Fast unit tests: everything not tagged "integration".
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+    testLogging { events 'failed'; exceptionFormat 'full' }
+}
+
+// Testcontainers-backed integration tests (require a Docker daemon).
+tasks.register('integrationTest', Test) {
+    description = 'Runs Testcontainers-based integration tests (PostgreSQL, Redis, Kafka).'
+    group = 'verification'
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    shouldRunAfter tasks.named('test')
+    testLogging { events 'passed', 'failed'; exceptionFormat 'full' }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}

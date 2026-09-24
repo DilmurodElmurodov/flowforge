@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "FlowForge (postgres)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "flowforge",
+      "Username": "flowforge",
+      "SSLMode": "prefer"
+    }
+  }
+}
