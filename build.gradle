@@ -14,6 +14,11 @@ java {
     }
 }
 
+springBoot {
+    // Single entry point; keeps bootRun/bootJar independent of main-class scanning.
+    mainClass = 'com.flowforge.FlowForgeApplication'
+}
+
 repositories {
     mavenCentral()
 }
