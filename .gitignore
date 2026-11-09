@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Environment ###
+.env
+
+### macOS ###
+.DS_Store
+
+### Claude ###
+.claude/
